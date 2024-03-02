@@ -117,66 +117,81 @@ static struct gpw_i2c_bus *pigpiod_i2c_create(char* uri)
     }
 
     /* Check the schema in URI if URI is not null */
-    if (strncmp(uri, IMPL_NAME, sizeof(IMPL_NAME) - 1) != 0) {
+    char *ptr = uri;
+    if (strncmp(ptr, IMPL_NAME, sizeof(IMPL_NAME) - 1) != 0) {
         goto error;
     }
-    uri += (sizeof(IMPL_NAME) - 1);
+    ptr += (sizeof(IMPL_NAME) - 1);
 
     char *addr = NULL;
     char *port = NULL;
     char *busnum = NULL;
+    char *tail;
     char addr_buf[128];
     char port_buf[8];
-    if (*uri ==  '\0') {
+    if (*ptr ==  '\0') {
         goto connect;
     }
-    if (*uri !=  ':') {
+    if (*ptr !=  ':') {
         goto error;
     }
-    uri++;
-    if (*uri ==  '\0') {
+    ptr++;
+    if (*ptr ==  '\0') {
         goto connect;
     }
-    if (strncmp(uri, "//", 2) != 0) {
-        busnum = uri;
+    if (strncmp(ptr, "//", 2) != 0) {
+        busnum = ptr;
         goto connect;
     }
-    uri += 2;
+    ptr += 2;
     addr = addr_buf;
-    for (i = 0; i < sizeof(addr_buf) - 1 && *uri != ':' && *uri != '/' && *uri != '\0'; i++) {
-        addr_buf[i] = *uri++;
+    for (i = 0; i < sizeof(addr_buf) - 1 && *ptr != ':' && *ptr != '/' && *ptr != '\0'; i++) {
+        addr_buf[i] = *ptr++;
     }
     addr_buf[i] = '\0';
-    if (*uri == ':') {
-        uri++;
+    if (*ptr == ':') {
+        ptr++;
         port = port_buf;
-        for (i = 0; i < sizeof(port_buf) - 1 && *uri != '/' && *uri != '\0'; i++) {
-            port_buf[i] = *uri++;
+        for (i = 0; i < sizeof(port_buf) - 1 && *ptr != '/' && *ptr != '\0'; i++) {
+            port_buf[i] = *ptr++;
         }
         port_buf[i] = '\0';
     }
-    if (*uri == '/') {
-        uri++;
-        busnum = uri;
+    if (*ptr == '/') {
+        ptr++;
+        busnum = ptr;
     }
 
  connect:
     if (addr != NULL || port != NULL) {
         gpiow_log(GPIOW_LOG_INFO, "%s: pigpio_start(%s, %s)", __func__, addr, port);
-    }
-    priv->pi = pigpio_start(addr, port);
-    if (priv->pi < 0) {
-        gpiow_log(GPIOW_LOG_ERROR, "%s: pigpio_start() failed", __func__);
-        goto error;
+        if (port) {
+            (void)strtol(port, &tail, 10);
+            if (*tail != '\0') {
+                goto malformed_uri;
+            }
+        }
     }
     if (busnum) {
-        gpiow_log(GPIOW_LOG_INFO, "%s: bus number is %s", __func__, busnum);
-        priv->busnum = atoi(busnum);
+        gpiow_log(GPIOW_LOG_INFO, "%s: bus number is \"%s\"", __func__, busnum);
+        priv->busnum = strtol(busnum, &tail, 10);
+        if (*tail != '\0') {
+            goto malformed_uri;
+        }
     } else {
         priv->busnum = 1;  /* Raspberry Pi's external I2C pins in the pin header */
     }
+    priv->pi = pigpio_start(addr, port);
+    if (priv->pi < 0) {
+        gpiow_log(GPIOW_LOG_ERROR, "%s: pigpio_start(\"%s\", \"%s\") failed", __func__,
+                  addr, port, pigpio_error(priv->pi));
+        goto error;
+    }
 
     return bus;
+
+ malformed_uri:
+    gpiow_log(GPIOW_LOG_ERROR, "%s: malformed URI, \"%s\"", __func__, uri);
 
  error:
     memset(priv, 0, sizeof(*priv));
