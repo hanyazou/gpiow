@@ -29,11 +29,13 @@ static struct {
     char *message;
 } errmsgs[] = {
     { GPIOW_RES_OK,
-      "" },
+      "OK" },
     { GPIOW_RES_INVALID_OBJ,
-      "" },
+      "Invalid object" },
     { GPIOW_RES_INVALID_HANDLE,
-      "" },
+      "Invalid handle" },
+    { GPIOW_RES_INVALID_URI,
+      "Invalid URI" },
 };
 
 char *gpiow_error(int errno)

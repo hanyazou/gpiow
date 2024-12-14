@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __GPIOW_H__
-#define __GPIOW_H__
+#ifndef GPIOW_H__
+#define GPIOW_H__
 
 #define GPIOW_MAJOR_VER 0
 #define GPIOW_MINOR_VER 5
@@ -32,6 +32,7 @@ enum gpiow_result {
     GPIOW_RES_OK = 0,
     GPIOW_RES_INVALID_OBJ = -1,
     GPIOW_RES_INVALID_HANDLE = -2,
+    GPIOW_RES_INVALID_URI = -3,
 };
 enum gpiow_log_level {
     GPIOW_LOG_ERROR,
@@ -60,4 +61,4 @@ extern int gpw_i2c_write_device(struct gpw_i2c_bus *, int handle, unsigned char 
 extern void gpw_i2c_close(struct gpw_i2c_bus *, int handle);
 extern void gpw_i2c_bus_release(struct gpw_i2c_bus *);
 
-#endif  /* __GPIOW_H__ */
+#endif  /* GPIOW_H__ */

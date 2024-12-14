@@ -7,6 +7,7 @@ find_package(pigpio REQUIRED)
 add_library(gpiow
     src/error.c
     src/log.c
+    src/uri.c
     src/multi_impl.c
     src/impl_pigpiod.c
 )

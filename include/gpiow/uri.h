@@ -22,26 +22,13 @@
  * SOFTWARE.
  */
 
-#ifndef GPIOW_MULTI_IMPL_H__
-#define GPIOW_MULTI_IMPL_H__
+#ifndef GPIOW_URI_H__
+#define GPIOW_URI_H__
 
 #include <gpiow/gpiow.h>
 
-struct gpw_i2c_impl_entry {
-    char *name;
-    struct gpw_i2c_impl_entry *next;
-    struct gpw_i2c_bus* (*create)(char* uri);
-};
+int gpiow_uri_schema(char **uri, char *buf, int len);
+int gpiow_uri_addr(char **uri, char *buf, int len);
+int gpiow_uri_port(char **uri, char *buf, int len);
 
-struct gpw_i2c_bus {
-    void *data;
-    int (*open)(struct gpw_i2c_bus*, int addr, unsigned int flags);
-    int (*read_device)(struct gpw_i2c_bus*, int handle, unsigned char *data, int size);
-    int (*write_device)(struct gpw_i2c_bus*, int handle, unsigned char *data, int size);
-    void (*close)(struct gpw_i2c_bus*, int handle);
-    void (*release)(struct gpw_i2c_bus*);
-};
-
-void gpw_i2c_bus_register(struct gpw_i2c_impl_entry *entry);
-
-#endif  /* GPIOW_MULTI_IMPL_H__ */
+#endif  /* GPIOW_URI_H__ */
