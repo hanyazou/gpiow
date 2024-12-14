@@ -24,8 +24,8 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <gpiow.h>
-#include <gpiow_multi_impl.h>
+#include <gpiow/gpiow.h>
+#include <gpiow/multi_impl.h>
 
 static struct gpw_i2c_impl_entry *impl_list = NULL;
 

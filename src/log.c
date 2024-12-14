@@ -24,7 +24,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
-#include <gpiow.h>
+#include <gpiow/gpiow.h>
 
 int gpiow_log_level = GPIOW_LOG_INFO;
 

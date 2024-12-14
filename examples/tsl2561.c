@@ -27,7 +27,7 @@
 #include <unistd.h>
 #include <math.h>
 
-#include <gpiow.h>
+#include <gpiow/gpiow.h>
 
 #define TLS2561_I2C_ADDR 0x39
 

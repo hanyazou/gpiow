@@ -24,8 +24,8 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <gpiow.h>
-#include <gpiow_multi_impl.h>
+#include <gpiow/gpiow.h>
+#include <gpiow/multi_impl.h>
 #include <pigpiod_if2.h>
 
 #define IMPL_NAME "pigpiod"

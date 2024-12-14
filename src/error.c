@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include <gpiow.h>
+#include <gpiow/gpiow.h>
 
 static struct {
     int no;
