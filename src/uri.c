@@ -24,82 +24,95 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <gpiow/uri.h>
 
-int gpiow_uri_schema(char **uri, char *buf, int len)
+static int gpiow_uri_match(char *uri, char **pattern, int flags)
 {
+    if (*uri == '\0') {
+        return 0;
+    }
+    if ((flags & 0x0f) == GPIOW_URI_MATCH_CHARS) {
+        gpiow_log(GPIOW_LOG_VERBOSE, "%s: *uri=%c, pattern=%s, match=%s", __func__, *uri, *pattern,
+                  strchr(*pattern, *uri) != NULL ? "true" : "false");
+        return strchr(*pattern, *uri) != NULL;
+    }
+    if ((flags & 0x0f) == GPIOW_URI_UNMATCH_CHARS) {
+        gpiow_log(GPIOW_LOG_VERBOSE, "%s: *uri=%c, pattern=%s, unmatch=%s", __func__, *uri,
+                  *pattern, strchr(*pattern, *uri) == NULL ? "true" : "false");
+        return strchr(*pattern, *uri) == NULL;
+    }
+    if ((flags & 0x0f) == GPIOW_URI_MATCH_EXACT) {
+        if (**pattern == '\0') {
+            gpiow_log(GPIOW_LOG_VERBOSE, "%s: *uri=%c, pattern=%s, END of exact match",
+                      __func__, *uri, *pattern);
+            return 0;
+        }
+        if (**pattern == *uri) {
+            gpiow_log(GPIOW_LOG_VERBOSE, "%s: *uri=%c, pattern=%s, match=true",
+                      __func__, *uri, *pattern);
+            (*pattern)++;
+            return 1;
+        } else {
+            gpiow_log(GPIOW_LOG_VERBOSE, "%s: *uri=%c, pattern=%s, match=false",
+                      __func__, *uri, *pattern);
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+int gpiow_uri_string(char **uri, char *buf, int len, char *pattern, int flags)
+{
+    int res;
+
     if (uri == NULL || *uri == NULL) {
         return GPIOW_RES_INVALID_URI;
     }
 
     char *p = *uri;
-    while (*p != '\0' && *p !=  ':') {
-        if (1 < len) {
+    while (gpiow_uri_match(p, &pattern, flags)) {
+        if (1 < len && buf != NULL) {
             *buf++ = *p;
             len--;
         }
         p++;
     }
-    if (*p == ':') {
-        p++;
-    }
-    if (0 < len) {
+    if (0 < len && buf != NULL) {
         *buf = '\0';
     }
-    *uri = p;
+    if ((flags & 0x0f) == GPIOW_URI_MATCH_EXACT && *pattern != '\0') {
+        /* not match exactly */
+        p = *uri;
+    }
+    res = p - *uri;
+    if ((flags & GPIOW_URI_PRESERVE) == 0) {
+        *uri = p;
+    }
 
-    return GPIOW_RES_OK;
+    return res;
 }
 
-int gpiow_uri_addr(char **uri, char *buf, int len)
+int gpiow_uri_integer(char **uri, int *number, int base, int flags)
 {
+    int res;
+    long tmp_num;
+    char *tmp_ptr;
+
     if (uri == NULL || *uri == NULL) {
         return GPIOW_RES_INVALID_URI;
     }
 
-    char *p = *uri;
-    if (strncmp(p, "//", 2) == 0) {
-        p += 2;
-        while (*p != '\0' && *p !=  ':' && *p !=  '/') {
-            if (1 < len) {
-                *buf++ = *p;
-                len--;
-            }
-            p++;
-        }
-    }
-    if (0 < len) {
-        *buf = '\0';
-    }
-    *uri = p;
-
-    return GPIOW_RES_OK;
-}
-
-int gpiow_uri_port(char **uri, char *buf, int len)
-{
-    if (uri == NULL || *uri == NULL) {
-        return GPIOW_RES_INVALID_URI;
+    tmp_num = strtol(*uri, &tmp_ptr, base);
+    if (number != NULL) {
+        *number = tmp_num;
     }
 
-    char *p = *uri;
-    if (*p == ':') {
-        p++;
-        while (*p != '\0' && *p !=  '/') {
-            if (1 < len) {
-                *buf++ = *p;
-                len--;
-            }
-            p++;
-        }
+    res = tmp_ptr - *uri;
+    if ((flags & GPIOW_URI_PRESERVE) == 0) {
+        *uri = tmp_ptr;
     }
-    if (*p == '/') {
-        p++;
-    }
-    if (0 < len) {
-        *buf = '\0';
-    }
-    *uri = p;
 
-    return GPIOW_RES_OK;
+    return res;
 }

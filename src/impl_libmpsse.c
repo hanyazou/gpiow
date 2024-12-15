@@ -189,30 +189,34 @@ static struct gpw_i2c_bus *libmpsse_i2c_create(char* uri)
         priv->mpsse = NULL;
     }
 
-    char schema[sizeof(IMPL_NAME)];
-    char vid[5];
-    char pid[5];
-    char *tail;
+    char vid[5] = {0};
+    char pid[5] = {0};
+    char *ptr = uri;
 
     /* Check the schema in URI if URI is not null */
-    if (gpiow_uri_schema(&uri, schema, sizeof(schema)) != GPIOW_RES_OK) {
-        goto malformed_uri;
-    }
-    if (strncmp(schema, IMPL_NAME, sizeof(IMPL_NAME)) != 0) {
-        goto error;
+    if (gpiow_uri_string(&ptr, NULL, 0, IMPL_NAME ":", GPIOW_URI_MATCH_EXACT) <= 0) {
+        goto not_match;
     }
 
-    if (gpiow_uri_addr(&uri, vid, sizeof(vid)) != GPIOW_RES_OK) {
-        goto malformed_uri;
-    }
-    if (gpiow_uri_port(&uri, pid, sizeof(pid)) != GPIOW_RES_OK) {
-        goto malformed_uri;
+    if (0 < gpiow_uri_string(&ptr, NULL, 0, "//", GPIOW_URI_MATCH_EXACT)) {
+        gpiow_uri_string(&ptr, vid, sizeof(vid), ":/", GPIOW_URI_UNMATCH_CHARS);
+        if (0 < gpiow_uri_string(&ptr, NULL, 0, ":", GPIOW_URI_MATCH_EXACT)) {
+            gpiow_uri_string(&ptr, pid, sizeof(pid), "/", GPIOW_URI_UNMATCH_CHARS);
+        }
     }
 
     /*
      * TODO: parse URI for clock speed and so on and handle VID:PID
      */
 
+    gpiow_uri_string(&ptr, NULL, 0, "/", GPIOW_URI_MATCH_EXACT);
+    if (*ptr != '\0') {
+        goto malformed_uri;
+    }
+
+    gpiow_log(GPIOW_LOG_INFO, "%s: %s%s%s clockspeed=%d, %s", __func__,
+              vid, (*vid || *pid) ? ":" : "", pid,
+              priv->clockspeed, priv->msblsb == MSB ? "MSB" : "LSB");
     priv->mpsse = MPSSE(I2C, priv->clockspeed, priv->msblsb);
     if (priv->mpsse == NULL || !priv->mpsse->open) {
         Close(priv->mpsse);
@@ -225,6 +229,7 @@ static struct gpw_i2c_bus *libmpsse_i2c_create(char* uri)
     gpiow_log(GPIOW_LOG_ERROR, "%s: malformed URI, \"%s\"", __func__, uri);
 
  error:
+ not_match:
     memset(priv, 0, sizeof(*priv));
     memset(bus, 0, sizeof(*bus));
     free(bus);

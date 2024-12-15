@@ -27,8 +27,12 @@
 
 #include <gpiow/gpiow.h>
 
-int gpiow_uri_schema(char **uri, char *buf, int len);
-int gpiow_uri_addr(char **uri, char *buf, int len);
-int gpiow_uri_port(char **uri, char *buf, int len);
+#define GPIOW_URI_MATCH_EXACT   0x00
+#define GPIOW_URI_MATCH_CHARS   0x01
+#define GPIOW_URI_UNMATCH_CHARS	0x02
+#define GPIOW_URI_PRESERVE      0x10
+
+int gpiow_uri_string(char **uri, char *buf, int len, char *pattern, int flags);
+int gpiow_uri_integer(char **uri, int *number, int base, int flags);
 
 #endif  /* GPIOW_URI_H__ */
