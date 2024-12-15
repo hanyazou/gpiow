@@ -48,3 +48,6 @@ endif()
 #
 add_executable(tsl2561 examples/tsl2561.c)
 target_link_libraries(tsl2561 gpiow)
+
+add_executable(i2cdetect examples/i2cdetect.c)
+target_link_libraries(i2cdetect gpiow)
