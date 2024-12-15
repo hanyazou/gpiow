@@ -36,6 +36,14 @@ static struct {
       "Invalid handle" },
     { GPIOW_RES_INVALID_URI,
       "Invalid URI" },
+    { GPIOW_RES_INVALID_ARGUMENT,
+      "Invalid argument" },
+    { GPIOW_RES_BACKEND_FAILURE,
+      "Backend failure" },
+    { GPIOW_RES_COMMUNICATION_ERROR,
+      "Communication error" },
+    { GPIOW_RES_BUSY,
+      "Resource busy" },
 };
 
 char *gpiow_error(int errno)
@@ -48,5 +56,5 @@ char *gpiow_error(int errno)
         }
     }
 
-    return "??????????";
+    return "Unknown error";
 }

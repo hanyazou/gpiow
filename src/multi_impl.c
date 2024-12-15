@@ -29,11 +29,16 @@
 
 static struct gpw_i2c_impl_entry *impl_list = NULL;
 
-extern void gpiow_pigpiod_initialize(void);
+#define module(name) extern void gpiow_##name##_initialize(void); \
+    void __attribute__((weak)) gpiow_##name##_initialize(void) { }
+
+module(pigpiod)
+module(libmpsse)
 
 void gpiow_initialize(void)
 {
     gpiow_pigpiod_initialize();
+    gpiow_libmpsse_initialize();
 }
 
 void gpw_i2c_bus_register(struct gpw_i2c_impl_entry *entry)
@@ -45,6 +50,7 @@ void gpw_i2c_bus_register(struct gpw_i2c_impl_entry *entry)
             gpiow_log(GPIOW_LOG_ERROR, "%s: %s is alredy registered", __func__, entry->name);
             return;
         }
+        p = &((*p)->next);
     }
     gpiow_log(GPIOW_LOG_DEBUG, "%s: %s is registered", __func__, entry->name);
     entry->next = impl_list;
